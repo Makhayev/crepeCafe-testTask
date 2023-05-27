@@ -16,7 +16,7 @@ const disabledGroups = [
 ];
 
 export default function Home() {
-  const { control, getValues } = useForm<TaxationInfoForm>();
+  const { control, getValues, watch } = useForm<TaxationInfoForm>();
   const [isPensioner, setIsPensioner] = useState<boolean>(false);
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [currentFinalResults, setCurrentFinalResults] = useState<
@@ -42,7 +42,7 @@ export default function Home() {
           <div className="mb-4 text-4xl font-bold">
             Онлайн калькулятор для
             <span className="ml-3 text-red-primary">
-              ТОО на упрощенном режиме ({getValues().year} г.)
+              ТОО на упрощенном режиме ({watch("year") ?? 2023} г.)
             </span>
           </div>
           <div className="h-fit border border-solid">
@@ -60,7 +60,9 @@ export default function Home() {
                         value={field?.value}
                         onChange={(event) => {
                           field.onChange(
-                            event?.target.value?.replace(/\D/g, "")
+                            event?.target.value
+                              ?.replace(/\D/g, "")
+                              .replace(/\B(?=(\d{3})+(?!\d))/g, " ")
                           );
                         }}
                       />
@@ -127,11 +129,12 @@ export default function Home() {
                 <div className="col-span-5 flex">
                   <div className="mr-2">
                     <Controller
-                      defaultValue={false}
+                      defaultValue={true}
                       render={({ field }) => (
                         <>
                           <Checkbox
                             className="mr-1"
+                            checked={field?.value}
                             onChange={(event) => {
                               field?.onChange(event.target.checked);
                             }}
@@ -393,7 +396,13 @@ export default function Home() {
                       <React.Fragment key={item?.taxName}>
                         <div className="my-2 flex w-full justify-between text-lg">
                           <div>{item?.taxName}</div>
-                          <div>{item?.taxValue} Тенге</div>
+                          <div>
+                            {String(Math.round(item?.taxValue)).replace(
+                              /\B(?=(\d{3})+(?!\d))/g,
+                              " "
+                            )}{" "}
+                            Тенге
+                          </div>
                         </div>
                         <Divider className="m-0" />
                       </React.Fragment>
@@ -406,7 +415,13 @@ export default function Home() {
                         <React.Fragment key={item?.taxName}>
                           <div className="my-2 flex w-full justify-between text-lg">
                             <div>{item?.taxName}</div>
-                            <div>{item?.taxValue} Тенге</div>
+                            <div>
+                              {String(Math.round(item?.taxValue)).replace(
+                                /\B(?=(\d{3})+(?!\d))/g,
+                                " "
+                              )}{" "}
+                              Тенге
+                            </div>
                           </div>
                           <Divider className="m-0" />
                         </React.Fragment>
@@ -416,7 +431,10 @@ export default function Home() {
                         На руки
                       </div>
                       <div className="w-full text-right text-xl font-bold">
-                        {currentFinalResults?.finalResult} Тенге
+                        {String(
+                          Math.round(currentFinalResults?.finalResult)
+                        ).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}{" "}
+                        Тенге
                       </div>
                       <Divider className="m-0" />
                     </div>

@@ -50,6 +50,7 @@ export const calculateTaxes = ({
 }: TaxationInfoForm): FinalResults => {
   let VOSMS = 0;
   let IPN = 0;
+  salary = parseInt(String(salary).replace(" ", ""));
   const employeeTaxes = [];
   if (
     !(
@@ -78,10 +79,10 @@ export const calculateTaxes = ({
   }
   if (
     !(
-      socialStatuses?.includes("astanaHubMFCA") ||
+      (socialStatuses?.includes("astanaHubMFCA") && isResident) ||
       socialStatuses?.includes("disabledGroupTwoIndefinite") ||
       socialStatuses?.includes("disabledGroupThreeIndefinite") ||
-      is882MRP
+      (is882MRP && isResident)
     )
   ) {
     if (
@@ -90,7 +91,7 @@ export const calculateTaxes = ({
       socialStatuses?.includes("pensionerOther")
     ) {
       IPN = salary * 0.1;
-      if (is14MRP) {
+      if (is14MRP && isResident) {
         IPN -= taxRate[year].MRP * 14 * 0.1;
       }
     } else if (
@@ -105,10 +106,18 @@ export const calculateTaxes = ({
     } else {
       IPN = (salary * 0.9 - VOSMS) * 0.1;
       if (is14MRP) {
-        IPN -= taxRate[year].MRP * 14 * 0.1;
+        IPN = IPN - taxRate[year].MRP * 14 * 0.1;
+      }
+      if (salary < 25 * taxRate[year].MRP) {
+        IPN *= 0.1;
       }
     }
-    employeeTaxes.push({ taxName: "ИПН", taxValue: IPN });
+    if (!isResident && !isStaffMember) {
+      IPN *= 2;
+    }
+    if (IPN > 0) {
+      employeeTaxes.push({ taxName: "ИПН", taxValue: IPN });
+    }
   }
   const employerTaxes = [];
   if (
@@ -120,7 +129,13 @@ export const calculateTaxes = ({
   ) {
     employerTaxes.push({
       taxName: "СО",
-      taxValue: Math.min(salary * taxRate[year].COrate, taxRate[year].maxCO),
+      taxValue: Math.min(
+        salary *
+          (socialStatuses?.includes("pensionerOther")
+            ? 0.035
+            : taxRate[year].COrate),
+        taxRate[year].maxCO
+      ),
     });
   }
   if (
@@ -148,7 +163,8 @@ export const calculateTaxes = ({
     !(
       socialStatuses?.includes("pensionerOther") ||
       socialStatuses?.includes("pensionerByAge") ||
-      !isResident
+      !isResident ||
+      !isStaffMember
     )
   ) {
     employerTaxes.push({
