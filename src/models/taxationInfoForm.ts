@@ -1,11 +1,11 @@
-type disabledGroups =
+export type disabledGroups =
   | "disabledGroupOne"
   | "disabledGroupTwo"
   | "disabledGroupTwoIndefinite"
   | "disabledGroupThree"
   | "disabledGroupThreeIndefinite";
 
-type socialStatus =
+export type socialStatus =
   | "pensionerByAge"
   | "pensionerOther"
   | "student"

@@ -9,6 +9,9 @@ const taxRate = {
     maxOOSMS: 8500,
     OOSMSrate: 0.02,
     OPPVrate: 0.05,
+    OPVrate: 0.1,
+    VOSMSrate: 0.02,
+    COrate: 0.0315,
   },
   2022: {
     MRP: 3063,
@@ -18,6 +21,9 @@ const taxRate = {
     maxOOSMS: 18000,
     OOSMSrate: 0.03,
     OPPVrate: 0.05,
+    OPVrate: 0.1,
+    VOSMSrate: 0.02,
+    COrate: 0.0315,
   },
   2023: {
     MRP: 3450,
@@ -27,6 +33,9 @@ const taxRate = {
     maxOOSMS: 21000,
     OOSMSrate: 0.03,
     OPPVrate: 0.05,
+    OPVrate: 0.1,
+    VOSMSrate: 0.02,
+    COrate: 0.0315,
   },
 };
 
@@ -51,7 +60,7 @@ export const calculateTaxes = ({
   ) {
     employeeTaxes.push({
       taxName: "ОПВ",
-      taxValue: Math.min(salary * 0.1, taxRate[year].maxOPV),
+      taxValue: Math.min(salary * taxRate[year].OPVrate, taxRate[year].maxOPV),
     });
   }
   if (
@@ -64,7 +73,7 @@ export const calculateTaxes = ({
       socialStatuses?.some((status) => status.includes("disabled"))
     )
   ) {
-    VOSMS = Math.min(salary * 0.02, taxRate[year].maxVOSMS);
+    VOSMS = Math.min(salary * taxRate[year].VOSMSrate, taxRate[year].maxVOSMS);
     employeeTaxes.push({ taxName: "ВОСМС", taxValue: VOSMS });
   }
   if (
@@ -111,7 +120,7 @@ export const calculateTaxes = ({
   ) {
     employerTaxes.push({
       taxName: "СО",
-      taxValue: Math.min(salary * 0.0315, taxRate[year].maxCO),
+      taxValue: Math.min(salary * taxRate[year].COrate, taxRate[year].maxCO),
     });
   }
   if (

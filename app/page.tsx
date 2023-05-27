@@ -2,7 +2,7 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useCallback, useState } from "react";
-import { FinalResults, TaxationInfoForm } from "@/src/models";
+import { FinalResults, socialStatus, TaxationInfoForm } from "@/src/models";
 import { Button, Checkbox, ConfigProvider, Divider, Input, Select } from "antd";
 import { CalculatorOutlined } from "@ant-design/icons";
 import { calculateTaxes } from "@/src/utils";
@@ -53,6 +53,7 @@ export default function Home() {
                   <Controller
                     control={control}
                     rules={{ required: "Введите сумму" }}
+                    defaultValue={0}
                     render={({ field }) => (
                       <Input
                         placeholder="Введите сумму..."
@@ -94,7 +95,7 @@ export default function Home() {
                     control={control}
                     name="isStaffMember"
                     defaultValue={true}
-                    render={({ field, formState }) => (
+                    render={({ field }) => (
                       <>
                         <div className="mr-2">
                           <Checkbox
@@ -213,12 +214,12 @@ export default function Home() {
                               setIsPensioner(event.target.checked);
                               if (event.target.checked) {
                                 field.onChange([
-                                  ...field.value,
+                                  ...(field?.value as socialStatus[]),
                                   "pensionerByAge",
                                 ]);
                               } else {
                                 field.onChange([
-                                  ...field?.value?.filter(
+                                  ...(field?.value as socialStatus[])?.filter(
                                     (item) =>
                                       item !== "pensionerByAge" &&
                                       item !== "pensionerOther"
@@ -238,7 +239,7 @@ export default function Home() {
                             ]}
                             onChange={(value) => {
                               field.onChange([
-                                ...field.value?.filter(
+                                ...(field.value as socialStatus[])?.filter(
                                   (item) =>
                                     item !== "pensionerByAge" &&
                                     item !== "pensionerOther"
@@ -256,12 +257,12 @@ export default function Home() {
                               setIsDisabled(event.target.checked);
                               if (event.target.checked) {
                                 field.onChange([
-                                  ...field.value,
+                                  ...(field.value as socialStatus[]),
                                   "disabledGroupOne",
                                 ]);
                               } else {
                                 field.onChange([
-                                  ...field?.value?.filter(
+                                  ...(field.value as socialStatus[])?.filter(
                                     (item) => !disabledGroups.includes(item)
                                   ),
                                 ]);
@@ -288,7 +289,7 @@ export default function Home() {
                             ]}
                             onChange={(value) => {
                               field.onChange([
-                                ...field.value?.filter(
+                                ...(field.value as socialStatus[])?.filter(
                                   (item) => !disabledGroups.includes(item)
                                 ),
                                 value,
@@ -302,10 +303,13 @@ export default function Home() {
                           <Checkbox
                             onChange={(event) => {
                               if (event.target.checked) {
-                                field.onChange([...field.value, "OPPV"]);
+                                field.onChange([
+                                  ...(field.value as socialStatus[]),
+                                  "OPPV",
+                                ]);
                               } else {
                                 field.onChange([
-                                  ...field?.value?.filter(
+                                  ...(field.value as socialStatus[])?.filter(
                                     (item) => item !== "OPPV"
                                   ),
                                 ]);
@@ -319,12 +323,12 @@ export default function Home() {
                             onChange={(event) => {
                               if (event.target.checked) {
                                 field.onChange([
-                                  ...field.value,
+                                  ...(field.value as socialStatus[]),
                                   "multipleChildren",
                                 ]);
                               } else {
                                 field.onChange([
-                                  ...field?.value?.filter(
+                                  ...(field.value as socialStatus[])?.filter(
                                     (item) => item !== "multipleChildren"
                                   ),
                                 ]);
@@ -337,10 +341,13 @@ export default function Home() {
                           <Checkbox
                             onChange={(event) => {
                               if (event.target.checked) {
-                                field.onChange([...field.value, "student"]);
+                                field.onChange([
+                                  ...(field.value as socialStatus[]),
+                                  "student",
+                                ]);
                               } else {
                                 field.onChange([
-                                  ...field?.value?.filter(
+                                  ...(field.value as socialStatus[])?.filter(
                                     (item) => item !== "student"
                                   ),
                                 ]);
@@ -354,12 +361,12 @@ export default function Home() {
                             onChange={(event) => {
                               if (event.target.checked) {
                                 field.onChange([
-                                  ...field.value,
+                                  ...(field.value as socialStatus[]),
                                   "astanaHubMFCA",
                                 ]);
                               } else {
                                 field.onChange([
-                                  ...field?.value?.filter(
+                                  ...(field.value as socialStatus[])?.filter(
                                     (item) => item !== "astanaHubMFCA"
                                   ),
                                 ]);
