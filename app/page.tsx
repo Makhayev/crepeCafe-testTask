@@ -1,113 +1,435 @@
-import Image from 'next/image'
+"use client";
+import React from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useCallback, useState } from "react";
+import { FinalResults, TaxationInfoForm } from "@/src/models";
+import { Button, Checkbox, ConfigProvider, Divider, Input, Select } from "antd";
+import { CalculatorOutlined } from "@ant-design/icons";
+import { calculateTaxes } from "@/src/utils";
+
+const disabledGroups = [
+  "disabledGroupOne",
+  "disabledGroupTwo",
+  "disabledGroupTwoIndefinite",
+  "disabledGroupThree",
+  "disabledGroupThreeIndefinite",
+];
 
 export default function Home() {
+  const { control, getValues } = useForm<TaxationInfoForm>();
+  const [isPensioner, setIsPensioner] = useState<boolean>(false);
+  const [isDisabled, setIsDisabled] = useState<boolean>(false);
+  const [currentFinalResults, setCurrentFinalResults] = useState<
+    FinalResults | undefined
+  >();
+
+  const handleCalculate = useCallback(() => {
+    setCurrentFinalResults({} as FinalResults);
+    const results = calculateTaxes(getValues());
+    setCurrentFinalResults(results);
+  }, [getValues]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main>
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: "#ce1313",
+          },
+        }}
+      >
+        <div className="p-12">
+          <div className="mb-4 text-4xl font-bold">
+            Онлайн калькулятор для
+            <span className="ml-3 text-red-primary">
+              ТОО на упрощенном режиме ({getValues().year} г.)
+            </span>
+          </div>
+          <div className="h-fit border border-solid">
+            <div className="grid grid-cols-3">
+              <div className="col-span-2 grid grid-cols-6 gap-y-4 p-10">
+                <div className="flex items-center font-semibold">Доход</div>
+                <div className="col-span-5 flex items-center">
+                  <Controller
+                    control={control}
+                    rules={{ required: "Введите сумму" }}
+                    render={({ field }) => (
+                      <Input
+                        placeholder="Введите сумму..."
+                        value={field?.value}
+                        onChange={(event) => {
+                          field.onChange(
+                            event?.target.value?.replace(/\D/g, "")
+                          );
+                        }}
+                      />
+                    )}
+                    name="salary"
+                  />
+                </div>
+                <div className="flex items-center font-semibold">Год</div>
+                <div className="col-span-5 flex items-center">
+                  <Controller
+                    control={control}
+                    defaultValue="2023"
+                    render={({ field }) => (
+                      <Select
+                        defaultValue="2023"
+                        options={[
+                          { label: "2021", value: "2021" },
+                          { label: "2022", value: "2022" },
+                          { label: "2023", value: "2023" },
+                        ]}
+                        onChange={(event) => {
+                          field.onChange(event);
+                        }}
+                      />
+                    )}
+                    name="year"
+                  />
+                </div>
+                <div className="flex items-center font-semibold">Расчет за</div>
+                <div className="col-span-5 flex">
+                  <Controller
+                    control={control}
+                    name="isStaffMember"
+                    defaultValue={true}
+                    render={({ field, formState }) => (
+                      <>
+                        <div className="mr-2">
+                          <Checkbox
+                            className="mr-1"
+                            value={field?.value}
+                            checked={!!field?.value}
+                            onChange={(event) => {
+                              field.onChange(event.target.checked);
+                            }}
+                          />
+                          Сотрудника в штате
+                        </div>
+                        <div>
+                          <Checkbox
+                            className="mr-1"
+                            value={field?.value}
+                            checked={!field?.value}
+                            onChange={(event) => {
+                              field.onChange(!event.target.checked);
+                            }}
+                          />
+                          ГПХ
+                        </div>
+                      </>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center font-semibold">Вычеты</div>
+                <div className="col-span-5 flex">
+                  <div className="mr-2">
+                    <Controller
+                      defaultValue={false}
+                      render={({ field }) => (
+                        <>
+                          <Checkbox
+                            className="mr-1"
+                            onChange={(event) => {
+                              field?.onChange(event.target.checked);
+                            }}
+                          />
+                          Вычет 14 МРП
+                        </>
+                      )}
+                      name="is14MRP"
+                      control={control}
+                    />
+                  </div>
+                  <div>
+                    <Controller
+                      control={control}
+                      name="is882MRP"
+                      defaultValue={false}
+                      render={({ field }) => (
+                        <>
+                          <Checkbox
+                            className="mr-1"
+                            onChange={(event) => {
+                              field?.onChange(event.target.checked);
+                            }}
+                          />{" "}
+                          Вычет 882 МРП
+                        </>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center font-semibold">
+                  Резидентство
+                </div>
+                <div className="col-span-5 flex">
+                  <Controller
+                    control={control}
+                    name="isResident"
+                    defaultValue={true}
+                    render={({ field }) => (
+                      <>
+                        <div className="mr-2">
+                          <Checkbox
+                            className="mr-1"
+                            value={field?.value}
+                            checked={!!field?.value}
+                            onChange={(event) => {
+                              field.onChange(event.target.checked);
+                            }}
+                          />
+                          Гражданин РК
+                        </div>
+                        <div>
+                          <Checkbox
+                            className="mr-1"
+                            value={field?.value}
+                            checked={!field?.value}
+                            onChange={(event) => {
+                              field.onChange(!event.target.checked);
+                            }}
+                          />
+                          Иностранец
+                        </div>
+                      </>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center font-semibold">
+                  Социальные статусы
+                </div>
+                <Controller
+                  control={control}
+                  name="socialStatuses"
+                  defaultValue={[]}
+                  render={({ field }) => {
+                    return (
+                      <div className="col-span-5 grid grid-cols-2 gap-y-4">
+                        <div className="flex items-center">
+                          <Checkbox
+                            onChange={(event) => {
+                              setIsPensioner(event.target.checked);
+                              if (event.target.checked) {
+                                field.onChange([
+                                  ...field.value,
+                                  "pensionerByAge",
+                                ]);
+                              } else {
+                                field.onChange([
+                                  ...field?.value?.filter(
+                                    (item) =>
+                                      item !== "pensionerByAge" &&
+                                      item !== "pensionerOther"
+                                  ),
+                                ]);
+                              }
+                            }}
+                          />
+                          <div className="mx-2">Пенсионер</div>
+                          <Select
+                            options={[
+                              { label: "По возрасту", value: "pensionerByAge" },
+                              {
+                                label: "Прочите группы",
+                                value: "pensionerOther",
+                              },
+                            ]}
+                            onChange={(value) => {
+                              field.onChange([
+                                ...field.value?.filter(
+                                  (item) =>
+                                    item !== "pensionerByAge" &&
+                                    item !== "pensionerOther"
+                                ),
+                                value,
+                              ]);
+                            }}
+                            disabled={!isPensioner}
+                            defaultValue="pensionerByAge"
+                          />
+                        </div>
+                        <div className="flex items-center">
+                          <Checkbox
+                            onChange={(event) => {
+                              setIsDisabled(event.target.checked);
+                              if (event.target.checked) {
+                                field.onChange([
+                                  ...field.value,
+                                  "disabledGroupOne",
+                                ]);
+                              } else {
+                                field.onChange([
+                                  ...field?.value?.filter(
+                                    (item) => !disabledGroups.includes(item)
+                                  ),
+                                ]);
+                              }
+                            }}
+                          />
+                          <div className="mx-2">Инвалид</div>
+                          <Select
+                            options={[
+                              { label: "1 группа", value: "disabledGroupOne" },
+                              { label: "2 группа", value: "disabledGroupTwo" },
+                              {
+                                label: "2 группа бессрочно",
+                                value: "disabledGroupTwoIndefinite",
+                              },
+                              {
+                                label: "3 группа",
+                                value: "disabledGroupThree",
+                              },
+                              {
+                                label: "3 группа бессрочно",
+                                value: "dsiabledGroupThreeIndefinite",
+                              },
+                            ]}
+                            onChange={(value) => {
+                              field.onChange([
+                                ...field.value?.filter(
+                                  (item) => !disabledGroups.includes(item)
+                                ),
+                                value,
+                              ]);
+                            }}
+                            disabled={!isDisabled}
+                            defaultValue="disabledGroupOne"
+                          />
+                        </div>
+                        <div className="flex items-center">
+                          <Checkbox
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                field.onChange([...field.value, "OPPV"]);
+                              } else {
+                                field.onChange([
+                                  ...field?.value?.filter(
+                                    (item) => item !== "OPPV"
+                                  ),
+                                ]);
+                              }
+                            }}
+                          />
+                          <div className="mx-2">Получатель ОППВ</div>
+                        </div>
+                        <div className="flex items-center">
+                          <Checkbox
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                field.onChange([
+                                  ...field.value,
+                                  "multipleChildren",
+                                ]);
+                              } else {
+                                field.onChange([
+                                  ...field?.value?.filter(
+                                    (item) => item !== "multipleChildren"
+                                  ),
+                                ]);
+                              }
+                            }}
+                          />
+                          <div className="mx-2">Многодетная мать</div>
+                        </div>
+                        <div className="flex items-center">
+                          <Checkbox
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                field.onChange([...field.value, "student"]);
+                              } else {
+                                field.onChange([
+                                  ...field?.value?.filter(
+                                    (item) => item !== "student"
+                                  ),
+                                ]);
+                              }
+                            }}
+                          />
+                          <div className="mx-2">Студент</div>
+                        </div>
+                        <div className="flex items-center">
+                          <Checkbox
+                            onChange={(event) => {
+                              if (event.target.checked) {
+                                field.onChange([
+                                  ...field.value,
+                                  "astanaHubMFCA",
+                                ]);
+                              } else {
+                                field.onChange([
+                                  ...field?.value?.filter(
+                                    (item) => item !== "astanaHubMFCA"
+                                  ),
+                                ]);
+                              }
+                            }}
+                          />
+                          <div className="mx-2">
+                            Сотрудник участника Астана хаб/МФЦа
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+              </div>
+              <div className="flex flex-col items-center border-l p-10">
+                {!!currentFinalResults ? (
+                  <>
+                    <div className="mb-8 text-3xl">ИТОГО</div>
+                    <div className="w-full font-semibold text-text-secondary">
+                      За счет работника
+                    </div>
+                    {currentFinalResults?.employeeTaxes?.map((item) => (
+                      <React.Fragment key={item?.taxName}>
+                        <div className="my-2 flex w-full justify-between text-lg">
+                          <div>{item?.taxName}</div>
+                          <div>{item?.taxValue} Тенге</div>
+                        </div>
+                        <Divider className="m-0" />
+                      </React.Fragment>
+                    ))}
+                    <div className="mt-4 w-full font-semibold text-text-secondary">
+                      За счет работодателя
+                    </div>
+                    {currentFinalResults?.employerTaxes?.length > 0 &&
+                      currentFinalResults?.employerTaxes?.map((item) => (
+                        <React.Fragment key={item?.taxName}>
+                          <div className="my-2 flex w-full justify-between text-lg">
+                            <div>{item?.taxName}</div>
+                            <div>{item?.taxValue} Тенге</div>
+                          </div>
+                          <Divider className="m-0" />
+                        </React.Fragment>
+                      ))}
+                    <div className="mt-8 w-full">
+                      <div className="w-full text-left font-semibold text-text-secondary">
+                        На руки
+                      </div>
+                      <div className="w-full text-right text-xl font-bold">
+                        {currentFinalResults?.finalResult} Тенге
+                      </div>
+                      <Divider className="m-0" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center">
+                    <CalculatorOutlined className="text-9xl" />
+                    <div className="text-center text-xl font-semibold">
+                      Укажите параметры для поулчения результата
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="col-span-2 flex justify-center border-r pb-4">
+                <Button onClick={handleCalculate}>Рассчитать</Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      </ConfigProvider>
     </main>
-  )
+  );
 }
